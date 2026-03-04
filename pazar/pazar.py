@@ -61,13 +61,11 @@ def get_raw_item_names():
         return sorted(list(set([item.get('name', '') for item in res if item.get('name')])))
     except: return []
 
-# --- BACKGROUND ENGINE (Thread Güvenli Versiyon) ---
+# --- BACKGROUND ENGINE ---
 def tracker_worker():
-    # Thread başladığında sent_cache temizlenir
     sent_cache = set()
     
     while True:
-        # st.session_state yerine dosyadan kontrol et
         if not get_bot_status():
             break
             
@@ -88,12 +86,26 @@ def tracker_worker():
                                     match_count += 1; break
                         
                         if match_count == len(crit['attrs']) and m_item['id'] not in sent_cache:
-                            msg = f"🎯 *BULUNDU:* {m_item['name']}\n💰 {m_item['wonPrice']} Won\n👤 {m_item['seller']}\n🔗 https://metin2alerts.com/store"
-                            requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "Markdown"})
+                            # TÜM EFSUNLARI METNE DÖNÜŞTÜRME
+                            efsun_metni = ""
+                            for p_id, p_val in m_item.get('attrs', []):
+                                # Efsun adını sözlükten çek, yoksa ID yaz
+                                e_adi = all_ids_map.get(p_id, f"Efsun {p_id}")
+                                efsun_metni += f"▫️ {e_adi}: {p_val}\n"
+                            
+                            # MESAJ FORMATI (Link Kaldırıldı, Tüm Efsunlar Eklendi)
+                            msg = (f"🎯 *İTEM BULUNDU!*\n\n"
+                                   f"📦 *Eşya:* {m_item['name']}\n"
+                                   f"💰 *Fiyat:* {m_item['wonPrice']} Won\n"
+                                   f"👤 *Satıcı:* {m_item['seller']}\n\n"
+                                   f"✨ *Tüm Efsunlar:*\n{efsun_metni}")
+                            
+                            requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
+                                         json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "Markdown"})
+                            
                             sent_cache.add(m_item['id'])
             
-            # Log dosyasını güncelle (isteğe bağlı, şimdilik terminale basar)
-            print(f"Tarama Yapıldı: {datetime.now()}")
+            print(f"Tarama Başarılı: {datetime.now().strftime('%H:%M:%S')}")
         except Exception as e:
             print(f"Hata: {e}")
             
@@ -169,3 +181,4 @@ with t2:
         st.table(st.session_state.track_list)
     else:
         st.info("Henüz filtre eklenmedi.")
+
