@@ -118,7 +118,7 @@ if st.button("🔥 TARAMAYI BAŞLAT", type="primary"):
                                    f"📦 *Eşya:* {m_item['name']}\n"
                                    f"💰 *Fiyat:* {m_item['wonPrice']} Won\n"
                                    f"👤 *Satıcı:* {m_item['seller']}\n\n"
-                                   f"✨ *Tüm Efsunlar:*\n{efsun_msg})
+                                   f"✨ *Tüm Efsunlar:*\n{efsun_msg}")
                             
                             requests.post(f"https://api.telegram.org/bot{GOMULU_TOKEN}/sendMessage", 
                                          json={"chat_id": GOMULU_CHAT_ID, "text": msg, "parse_mode": "Markdown"})
@@ -130,5 +130,6 @@ if st.button("🔥 TARAMAYI BAŞLAT", type="primary"):
         except:
 
             time.sleep(15)
+
 
 
