@@ -61,9 +61,27 @@ def get_raw_item_names():
         return sorted(list(set([item.get('name', '') for item in res if item.get('name')])))
     except: return []
 
-# --- BACKGROUND ENGINE ---
+# --- GÖNDERİLENLERİ KAYDETME SİSTEMİ ---
+SENT_ITEMS_FILE = "sent_items.json"
+
+def load_sent_items():
+    if os.path.exists(SENT_ITEMS_FILE):
+        try:
+            with open(SENT_ITEMS_FILE, "r") as f:
+                return set(json.load(f))
+        except: return set()
+    return set()
+
+def save_sent_item(item_id):
+    sent_set = load_sent_items()
+    sent_set.add(item_id)
+    with open(SENT_ITEMS_FILE, "w") as f:
+        json.dump(list(sent_set), f)
+
+# --- BACKGROUND ENGINE (Hafızalı Versiyon) ---
 def tracker_worker():
-    sent_cache = set()
+    # Başlangıçta dosyadan daha önce gönderilenleri oku
+    sent_cache = load_sent_items()
     
     while True:
         if not get_bot_status():
@@ -75,9 +93,15 @@ def tracker_worker():
             data = requests.get(f"https://metin2alerts.com/store/public/data/57.json?r={r}", timeout=10).json()
             
             for m_item in data:
+                m_id = m_item.get('id')
+                # Eğer bu ID daha önce gönderildiyse (cache veya dosyada varsa) direkt geç
+                if m_id in sent_cache:
+                    continue
+
                 m_name = m_item.get('name', '').lower()
                 for crit in active_filters:
                     if not crit['name']: continue
+                    
                     if crit['name'].lower() in m_name and m_item['wonPrice'] <= crit['max_won']:
                         match_count = 0
                         for req in crit['attrs']:
@@ -85,27 +109,28 @@ def tracker_worker():
                                 if p_id == req['id'] and p_val >= req['val']:
                                     match_count += 1; break
                         
-                        if match_count == len(crit['attrs']) and m_item['id'] not in sent_cache:
-                            # TÜM EFSUNLARI METNE DÖNÜŞTÜRME
+                        if match_count == len(crit['attrs']):
+                            # Mesajı hazırla
                             efsun_metni = ""
                             for p_id, p_val in m_item.get('attrs', []):
-                                # Efsun adını sözlükten çek, yoksa ID yaz
                                 e_adi = all_ids_map.get(p_id, f"Efsun {p_id}")
                                 efsun_metni += f"▫️ {e_adi}: {p_val}\n"
                             
-                            # MESAJ FORMATI (Link Kaldırıldı, Tüm Efsunlar Eklendi)
-                            msg = (f"🎯 *İTEM BULUNDU!*\n\n"
+                            msg = (f"🎯 *YENİ İTEM!*\n\n"
                                    f"📦 *Eşya:* {m_item['name']}\n"
                                    f"💰 *Fiyat:* {m_item['wonPrice']} Won\n"
                                    f"👤 *Satıcı:* {m_item['seller']}\n\n"
                                    f"✨ *Tüm Efsunlar:*\n{efsun_metni}")
                             
+                            # Mesajı gönder
                             requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", 
                                          json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "Markdown"})
                             
-                            sent_cache.add(m_item['id'])
+                            # HEM hafızaya HEM dosyaya kaydet
+                            sent_cache.add(m_id)
+                            save_sent_item(m_id)
             
-            print(f"Tarama Başarılı: {datetime.now().strftime('%H:%M:%S')}")
+            print(f"Tarama Tamamlandı: {datetime.now().strftime('%H:%M:%S')}")
         except Exception as e:
             print(f"Hata: {e}")
             
@@ -181,4 +206,5 @@ with t2:
         st.table(st.session_state.track_list)
     else:
         st.info("Henüz filtre eklenmedi.")
+
 
