@@ -1,0 +1,25 @@
+name: Streamlit Keep Alive
+
+on:
+  schedule:
+    - cron: '0 */12 * * *' # Her 12 saatte bir çalışır
+  workflow_dispatch:      # İstediğinde elinle de başlatabilmen için
+
+jobs:
+  auto_commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Update dummy file
+        run: |
+          echo "Last ping: $(date)" > ping.txt
+
+      - name: Commit and Push
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add ping.txt
+          git commit -m "Keep Alive Ping: $(date)"
+          git push
