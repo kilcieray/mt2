@@ -79,6 +79,8 @@ def get_raw_item_names():
         return sorted(list(set([item.get('name', '') for item in res if item.get('name')])))
     except: return []
 
+
+# --- GÜNCELLENEN FONKSİYON ---
 def tracker_worker():
     sent_cache = load_sent_items()
     while True:
@@ -91,23 +93,48 @@ def tracker_worker():
                 m_id = m_item.get('id')
                 if m_id in sent_cache: continue
                 m_name = m_item.get('name', '').lower()
+                
+                # Efsun verilerini güvenli bir şekilde çek (Yoksa boş liste dön)
+                m_attrs = m_item.get('attrs') or []
+                m_rand = m_item.get('rand') or []
+                
+                # Hem normal efsunların hem rand efsunların olduğu birleşik liste
+                combined_attrs = m_attrs + m_rand
+
                 for crit in active_filters:
                     if not crit['name']: continue
                     if crit['name'].lower() in m_name and m_item['wonPrice'] <= crit['max_won']:
                         match_count = 0
+                        
+                        # Filtredeki her bir şartı, birleştirilmiş efsun listesinde ara
                         for req in crit['attrs']:
-                            for p_id, p_val in m_item.get('attrs', []):
+                            for p_id, p_val in combined_attrs:
                                 if p_id == req['id'] and p_val >= req['val']:
                                     match_count += 1; break
+                                    
                         if match_count == len(crit['attrs']):
-                            efsun_metni = "".join([f"▫️ {all_ids_map.get(pid, f'ID {pid}')}: {pval}\n" for pid, pval in m_item.get('attrs', [])])
-                            msg = (f"🎯 *YENİ İTEM!*\n\n📦 *Eşya:* {m_item['name']}\n💰 *Fiyat:* {m_item['wonPrice']} Won\n👤 *Satıcı:* {m_item['seller']}\n\n✨ *Tüm Efsunlar:*\n{efsun_metni}")
+                            
+                            # Efsun mesajlarını oluştur (Önce Rand, sonra Normal)
+                            rand_metni = "".join([f"🔸 {all_ids_map.get(pid, f'ID {pid}')}: {pval}\n" for pid, pval in m_rand])
+                            normal_metni = "".join([f"▫️ {all_ids_map.get(pid, f'ID {pid}')}: {pval}\n" for pid, pval in m_attrs])
+                            
+                            efsun_mesaji = ""
+                            if rand_metni:
+                                efsun_mesaji += f"🎲 *Rand Efsunlar:*\n{rand_metni}\n"
+                            if normal_metni:
+                                efsun_mesaji += f"✨ *Normal Efsunlar:*\n{normal_metni}"
+                                
+                            msg = (f"🎯 *YENİ İTEM!*\n\n📦 *Eşya:* {m_item['name']}\n💰 *Fiyat:* {m_item['wonPrice']} Won\n👤 *Satıcı:* {m_item['seller']}\n\n{efsun_mesaji}")
+                            
                             requests.post(f"https://api.telegram.org/bot{TOKEN}/sendMessage", json={"chat_id": CHAT_ID, "text": msg, "parse_mode": "Markdown"})
                             sent_cache.add(m_id)
                             save_sent_item(m_id)
             print(f"Tarama OK: {datetime.now().strftime('%H:%M:%S')}")
-        except: pass
+        except Exception as e: 
+            pass # Hataları göz ardı eder ama gerekirse print(e) ile debug yapabilirsin
         time.sleep(60)
+# -----------------------------
+
 
 st.set_page_config(page_title="BENIMPAZAR | Dashboard", layout="wide")
 
