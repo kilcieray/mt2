@@ -7,16 +7,25 @@ import json
 import os
 from datetime import datetime
 
-# --- ARAYÜZ AYARLARI VE MODERN TASARIM (CSS) ---
-st.set_page_config(page_title="Benim Pazar | Tracker", page_icon="🛍️", layout="wide")
+# --- ARAYÜZ AYARLARI VE GÖZ YORMAYAN MODERN TASARIM (CSS) ---
+st.set_page_config(page_title="BENIMPAZAR | Tracker", page_icon="🛍️", layout="wide")
 st.markdown("""
     <style>
-    .stApp { background-color: #f8f9fa; }
-    .css-1d391kg { padding-top: 2rem; }
+    /* Göz yormayan, Streamlit Dark Theme ile tam uyumlu şık CSS */
     .stButton>button { border-radius: 8px; font-weight: bold; transition: 0.3s; }
-    .stButton>button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-    .block-container { padding: 1.5rem; background: white; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-    .filter-header { font-size: 1.1rem; font-weight: 600; color: #2c3e50; }
+    .stButton>button:hover { transform: translateY(-2px); border-color: #ff4b4b; color: #ff4b4b; }
+    .filter-header { 
+        font-size: 1.1rem; 
+        font-weight: 600; 
+        color: #ff4b4b; 
+        border-bottom: 1px solid #444; 
+        padding-bottom: 5px; 
+        margin-top: 10px; 
+        margin-bottom: 10px; 
+    }
+    /* Blokların dış çerçevesini yumuşatma */
+    div[data-testid="stExpander"] { border-radius: 10px !important; overflow: hidden; border: 1px solid #333 !important; }
+    div[data-testid="stExpander"] summary { background-color: #16181f; }
     </style>
 """, unsafe_allow_html=True)
 
