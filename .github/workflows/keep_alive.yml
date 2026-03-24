@@ -2,8 +2,8 @@ name: Streamlit Keep Alive
 
 on:
   schedule:
-    - cron: '0 */12 * * *' # Her 12 saatte bir çalışır
-  workflow_dispatch:      # İstediğinde elinle de başlatabilmen için
+    - cron: '0 */8 * * *' # 8 saatte bir çalışır
+  workflow_dispatch:      # manuel çalıştırma
 
 jobs:
   auto_commit:
