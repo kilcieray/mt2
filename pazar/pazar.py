@@ -4248,7 +4248,7 @@ def tracker_worker():
                             elif b_type == "Socket":
                                 if block.get('val') in m_sockets: match_count += 1
 
-                        if match_count == len(blocks)
+                        if match_count == len(blocks):
                             rand_metni = "".join([f"🔸 {all_ids_map.get(pid, f'ID {pid}')}: {pval}\n" for pid, pval in m_rand])
                             normal_metni = "".join([f"▫️ {all_ids_map.get(pid, f'ID {pid}')}: {pval}\n" for pid, pval in m_attrs])
                             
