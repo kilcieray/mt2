@@ -108,11 +108,14 @@ def tracker_worker():
                         
                         # Filtredeki her bir şartı, birleştirilmiş efsun listesinde ara
                         for req in crit['attrs']:
+                            for p_id, p_val in m_item.get('attrs', []):
                             for p_id, p_val in combined_attrs:
                                 if p_id == req['id'] and p_val >= req['val']:
                                     match_count += 1; break
                                     
                         if match_count == len(crit['attrs']):
+                            efsun_metni = "".join([f"▫️ {all_ids_map.get(pid, f'ID {pid}')}: {pval}\n" for pid, pval in m_item.get('attrs', [])])
+                            msg = (f"🎯 *YENİ İTEM!*\n\n📦 *Eşya:* {m_item['name']}\n💰 *Fiyat:* {m_item['wonPrice']} Won\n👤 *Satıcı:* {m_item['seller']}\n\n✨ *Tüm Efsunlar:*\n{efsun_metni}")
                             
                             # Efsun mesajlarını oluştur (Önce Rand, sonra Normal)
                             rand_metni = "".join([f"🔸 {all_ids_map.get(pid, f'ID {pid}')}: {pval}\n" for pid, pval in m_rand])
@@ -130,6 +133,7 @@ def tracker_worker():
                             sent_cache.add(m_id)
                             save_sent_item(m_id)
             print(f"Tarama OK: {datetime.now().strftime('%H:%M:%S')}")
+        except: pass
         except Exception as e: 
             pass # Hataları göz ardı eder ama gerekirse print(e) ile debug yapabilirsin
         time.sleep(60)
@@ -162,7 +166,7 @@ with t1:
     col_exp, col_imp = st.columns(2)
     filters_json = json.dumps(st.session_state.track_list, ensure_ascii=False, indent=4)
     col_exp.download_button(label="📥 YEDEK İNDİR (PC'ye)", data=filters_json, file_name=f"pazar_yedek_{datetime.now().strftime('%d_%m')}.json", mime="application/json", use_container_width=True)
-    
+
     up_file = col_imp.file_uploader("📤 YEDEK YÜKLE", type=['json'], label_visibility="collapsed")
     if up_file:
         try:
